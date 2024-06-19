@@ -1,0 +1,16 @@
+project/
+app/
+models.py
+views.py
+forms.py
+templates/
+base.html
+index.html
+evaluate.html
+__init__.py
+__pycache__/
+urls.py
+wsgi.py
+settings.py
+requirements.txt
+manage.py

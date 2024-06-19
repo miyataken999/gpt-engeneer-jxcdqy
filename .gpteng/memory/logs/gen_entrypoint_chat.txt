@@ -1,0 +1,263 @@
+
+2024-06-19T03:24:34.795926
+================================ System Message ================================
+
+You will get information about a codebase that is currently on disk in the current folder.
+The user will ask you to write a script that runs the code in a specific way.
+You will answer with code blocks that include all the necessary terminal commands.
+Do not install globally. Do not use sudo.
+Do not explain the code, just give the commands.
+Do not use placeholders, use example values (like . for a folder argument) if necessary.
+
+
+================================ Human Message =================================
+
+
+        Make a unix script that
+        a) installs dependencies
+        b) runs all necessary parts of the codebase (in parallel if necessary)
+        
+Information about the codebase:
+
+```
+File: Structure
+1 project/
+2 app/
+3 models.py
+4 views.py
+5 forms.py
+6 templates/
+7 base.html
+8 index.html
+9 evaluate.html
+10 __init__.py
+11 __pycache__/
+12 urls.py
+13 wsgi.py
+14 settings.py
+15 requirements.txt
+16 manage.py
+
+File: requirements.txt
+1 Django==3.2.5
+
+File: manage.py
+1 import os
+2 import sys
+3 
+4 if __name__ == "__main__":
+5     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings")
+6     try:
+7         from django.core.management import execute_from_command_line
+8     except ImportError as exc:
+9         raise ImportError(
+10             "Couldn't import Django. Are you sure it's installed and "
+11             "available on your PYTHONPATH environment variable? Did you "
+12             "forget to activate a virtual environment?"
+13         ) from exc
+14     execute_from_command_line(sys.argv)
+
+File: project/settings.py
+1 import os
+2 
+3 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+4 
+5 SECRET_KEY = 'your_secret_key_here'
+6 
+7 DEBUG = True
+8 
+9 ALLOWED_HOSTS = []
+10 
+11 INSTALLED_APPS = [
+12     'django.contrib.admin',
+13     'django.contrib.auth',
+14     'django.contrib.contenttypes',
+15     'django.contrib.sessions',
+16     'django.contrib.messages',
+17     'django.contrib.staticfiles',
+18     'app',
+19 ]
+20 
+21 MIDDLEWARE = [
+22     'django.middleware.security.SecurityMiddleware',
+23     'django.contrib.sessions.middleware.SessionMiddleware',
+24     'django.middleware.common.CommonMiddleware',
+25     'django.middleware.csrf.CsrfViewMiddleware',
+26     'django.contrib.auth.middleware.AuthenticationMiddleware',
+27     'django.contrib.messages.middleware.MessageMiddleware',
+28     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+29 ]
+30 
+31 ROOT_URLCONF = 'project.urls'
+32 
+33 TEMPLATES = [
+34     {
+35         'BACKEND': 'django.template.backends.django.DjangoTemplates',
+36         'DIRS': [],
+37         'APP_DIRS': True,
+38         'OPTIONS': {
+39             'context_processors': [
+40                 'django.template.context_processors.debug',
+41                 'django.template.context_processors.request',
+42                 'django.contrib.auth.context_processors.auth',
+43                 'django.contrib.messages.context_processors.messages',
+44             ],
+45         },
+46     },
+47 ]
+48 
+49 WSGI_APPLICATION = 'project.wsgi.application'
+50 
+51 DATABASES = {
+52     'default': {
+53         'ENGINE': 'django.db.backends.sqlite3',
+54         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+55     }
+56 }
+57 
+58 AUTH_PASSWORD_VALIDATORS = [
+59     {
+60         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+61     },
+62     {
+63         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+64     },
+65     {
+66         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+67     },
+68     {
+69         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+70     },
+71 ]
+72 
+73 LANGUAGE_CODE = 'ja'
+74 
+75 TIME_ZONE = 'Asia/Tokyo'
+76 
+77 USE_I18N = True
+78 
+79 USE_L10N = True
+80 
+81 USE_TZ = True
+82 
+83 STATIC_URL = '/static/'
+
+File: app/models.py
+1 from django.db import models
+2 
+3 class Jewelry(models.Model):
+4     name = models.CharField(max_length=255)
+5     type = models.CharField(max_length=255)
+6     size = models.CharField(max_length=255)
+7     shape = models.CharField(max_length=255)
+8     condition = models.CharField(max_length=255)
+9     image = models.ImageField(upload_to='jewelry_images')
+10 
+11     def __str__(self):
+12         return self.name
+
+File: app/forms.py
+1 from django import forms
+2 from .models import Jewelry
+3 
+4 class JewelryForm(forms.ModelForm):
+5     class Meta:
+6         model = Jewelry
+7         fields = ('name', 'type', 'size', 'shape', 'condition', 'image')
+
+File: app/views.py
+1 from django.shortcuts import render, redirect
+2 from .forms import JewelryForm
+3 from .models import Jewelry
+4 
+5 def index(request):
+6     return render(request, 'index.html')
+7 
+8 def evaluate(request):
+9     if request.method == 'POST':
+10         form = JewelryForm(request.POST, request.FILES)
+11         if form.is_valid():
+12             form.save()
+13             return redirect('evaluate')
+14     else:
+15         form = JewelryForm()
+16     return render(request, 'evaluate.html', {'form': form})
+17 
+18 def estimate_value(request):
+19     # TO DO: implement estimate value logic
+20     pass
+
+File: app/urls.py
+1 from django.urls import path
+2 from . import views
+3 
+4 urlpatterns = [
+5     path('', views.index, name='index'),
+6     path('evaluate/', views.evaluate, name='evaluate'),
+7     path('estimate_value/', views.estimate_value, name='estimate_value'),
+8 ]
+
+File: project/urls.py
+1 from django.contrib import admin
+2 from django.urls import include, path
+3 
+4 urlpatterns = [
+5     path('admin/', admin.site.urls),
+6     path('', include('app.urls')),
+7 ]
+
+File: templates/base.html
+1 <!DOCTYPE html>
+2 <html>
+3 <head>
+4     <title>18K Gold Jewelry Evaluation</title>
+5 </head>
+6 <body>
+7     <header>
+8         <nav>
+9             <ul>
+10                 <li><a href="{% url 'index' %}">Home</a></li>
+11                 <li><a href="{% url 'evaluate' %}">Evaluate</a></li>
+12             </ul>
+13         </nav>
+14     </header>
+15     <main>
+16         {% block content %}{% endblock %}
+17     </main>
+18 </body>
+19 </html>
+
+File: templates/index.html
+1 {% extends 'base.html' %}
+2 
+3 {% block content %}
+4     <h1>18K Gold Jewelry Evaluation</h1>
+5     <p>Welcome to our 18K gold jewelry evaluation service.</p>
+6 {% endblock %}
+
+File: templates/evaluate.html
+1 {% extends 'base.html' %}
+2 
+3 {% block content %}
+4     <h1>Evaluate Your 18K Gold Jewelry</h1>
+5     <form method="post" enctype="multipart/form-data">
+6         {% csrf_token %}
+7         {{ form.as_p }}
+8         <button type="submit">Evaluate</button>
+9     </form>
+10 {% endblock %}
+
+```
+
+================================== Ai Message ==================================
+
+Here is the Unix script that installs dependencies and runs the codebase:
+```
+#!/bin/bash
+
+# Install dependencies
+python -m pip install -r requirements.txt
+
+# Run the Django development server
+python manage.py runserver
+```
